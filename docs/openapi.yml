@@ -1,0 +1,466 @@
+openapi: "3.0.3"
+info:
+  version: "1.0"
+  title: Lowball Builtin Routes
+components:
+  schemas:
+    auth_package:
+      type: object
+      description: "a json body that is auth provider dependent. See chosen provider documentation for the AuthPackage"
+    client_creation_package:
+      type: object
+      description: "a json body that is auth provider dependent. See chosen provider documentation for the CreateClientPackage"
+    client_registration_package:
+      type: object
+      description: "a json body that is auth provider dependent. See chosen provider documentation for the ClientRegistrationPackage"
+    client_update_package:
+      type: object
+      description: "a json body that is auth provider dependent. See chosen provider documentation for the UpdateClientPackage"
+    client_self_update_package:
+      type: object
+      description: "a json body that is auth provider dependent. See chosen provider documentation for the SelfUpdateClientPackage"
+    status_response:
+      type: object
+      properties:
+        name:
+          type: string
+        auth_provider_initialized:
+          type: boolean
+        auth_db_initialized:
+          type: boolean
+      required:
+        - name
+        - auth_provider_initialized
+        - auth_db_initialized
+    token_data:
+      description: "component fields of a jwt token"
+      type: object
+      properties:
+        cid:
+          description: "the client id for the token"
+          type: string
+        r:
+          description: "the roles for the token"
+          type: array
+          items:
+            type: string
+        cts:
+          description: "token creation timestamp"
+          type: string
+        ets:
+          description: "token expiration time stamp"
+          type: string
+        rcid:
+          description: "requesting client id"
+          type: string
+        tid:
+          description: "token id"
+          type: string
+    client_data:
+      description: "basic client data for a client in the provider. Fields may exceed what is shown based on provider implementation"
+      type: object
+      properties:
+        client_id:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+    token_list_response:
+      description: response as list of token objects
+      type: array
+      items:
+        $ref: "#/components/schemas/token_data"
+    client_list_response:
+      description: response as list of client objects
+      type: array
+      items:
+        $ref: "#/components/schemas/client_data"
+    auth_response:
+      type: object
+      description: "response for successful authentication"
+      properties:
+        token:
+          description: "the jwt token"
+          type: string
+        token_data:
+          $ref: "#/components/schemas/token_data"
+    token_create_request:
+      description: "request body for token creation"
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: "client_id for the token. Must be admin create token for another client"
+        roles:
+          type: array
+          description: "roles to request for the token"
+          items:
+            type: string
+        token_life:
+          type: integer
+          description: "the time in seconds the token should be valid for after it is issued"
+
+  parameters:
+    client_id:
+      name: client_id
+      schema:
+        type: string
+      in: path
+      required: true
+    token_id:
+      name: token_id
+      schema:
+        type: string
+      in: path
+      required: true
+    role:
+      name: role
+      schema:
+        type: string
+      in: path
+      required: true
+    client_ids:
+      name: client_ids
+      schema:
+        type: array
+        items:
+          type: string
+      required: false
+      in: query
+    roles:
+      name: roles
+      schema:
+        type: array
+        items:
+          type: string
+      required: false
+      in: query
+    exclude_expired:
+      name: exclude_expired
+      schema:
+        type: boolean
+      required: false
+      in: query
+
+
+  securitySchemes:
+    jwt_token:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  "/builtins/status":
+    get:
+      security:
+        - jwt_token: []
+      description: "get basic status information about authentication provider state of the service"
+      responses:
+        "200":
+          description: "reports status of service including name and whether there is an enabled auth provider"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/status_response"
+
+  "/builtins/auth":
+    post:
+      description: "obtain a token (login)"
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/auth_package"
+      responses:
+        "200":
+          description: "successful login"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/auth_response"
+    get:
+      security:
+        - jwt_token: [ ]
+      description: "get information about current authenticated token"
+      responses:
+        "200":
+          description: "successfully return of token data"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/token_data"
+
+    delete:
+      security:
+        - jwt_token: [ ]
+      description: "revoke current authenticated token (logout)"
+      responses:
+        "204":
+          description: "successfully revoked current token"
+  "/builtins/auth/tokens":
+    get:
+      parameters:
+        - $ref: "#/components/parameters/roles"
+        - $ref: "#/components/parameters/exclude_expired"
+      security:
+        - jwt_token: [ ]
+      description: "get listing of all tokens for current authenticated client"
+      responses:
+        "200":
+          description: "tokens returned successfully"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/token_list_response"
+    post:
+      security:
+        - jwt_token: [ ]
+      description: "create a token for the current authenticated client or target client"
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/token_create_request"
+      responses:
+        "201":
+          description: "token created"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/token_data"
+    delete:
+      security:
+        - jwt_token: [ ]
+      description: "revoke tokens for the current authenticated clients"
+      responses:
+        204:
+          description: "tokens removed successfully"
+  "/builtins/auth/tokens/all":
+    get:
+      parameters:
+        - $ref: "#/components/parameters/roles"
+        - $ref: "#/components/parameters/exclude_expired"
+        - $ref: "#/components/parameters/client_ids"
+      security:
+        - jwt_token: [ ]
+      description: "get tokens for all clients in auth database"
+      responses:
+        "200":
+          description: "tokens returned successfully"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/token_list_response"
+    delete:
+      security:
+        - jwt_token: [ ]
+      description: "delete tokens for all clients in auth database"
+      responses:
+        204:
+          description: "tokens deleted successfully"
+  "/builtins/auth/tokens/cleanup":
+    post:
+      security:
+        - jwt_token: [ ]
+      description: "initiate cleanup operation for expired tokens"
+      responses:
+        "204":
+          description: "the cleanup operation was initiated"
+  "/builtins/auth/tokens/{token_id}":
+    get:
+      parameters:
+        - $ref: "#/components/parameters/token_id"
+      security:
+        - jwt_token: [ ]
+      description: "get information on a specific token by token_id"
+      responses:
+        "200":
+          description: "successfully return of token data"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/token_data"
+    delete:
+      parameters:
+        - $ref: "#/components/parameters/token_id"
+      security:
+        - jwt_token: [ ]
+      description: "revoke a token by token id"
+      responses:
+        "204":
+          description: "token deleted successfully"
+  "/builtins/auth/clients":
+    get:
+      security:
+        - jwt_token: [ ]
+      description: "get authenticated client information from auth provider"
+      responses:
+        "200":
+          description: "the client data is returned successfully"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/client_data"
+    post:
+      security:
+        - jwt_token: [ ]
+      description: "authenticated client update own information in auth provider"
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/client_self_update_package"
+      responses:
+        "200":
+          description: "the client was updated successfully"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/client_data"
+  "/builtins/auth/clients/create":
+    post:
+      security:
+        - jwt_token: [ ]
+      description: "create a client in the auth provider"
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/client_creation_package"
+      responses:
+        "201":
+          description: "the client was created successfully"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/client_data"
+  "/builtins/auth/clients/register":
+    post:
+      description: "allow a client to register itself in the auth provider"
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/client_registration_package"
+      responses:
+        "201":
+          description: "the client was created successfully"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/client_data"
+  "/builtins/auth/clients/all":
+    get:
+      parameters:
+        - $ref: "#/components/parameters/roles"
+      security:
+        - jwt_token: [ ]
+      description: "return list of all clients in the auth provider"
+      responses:
+        "200":
+          description: "the clients were returned successfully"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/client_list_response"
+
+  "/builtins/auth/clients/{client_id}":
+    get:
+      parameters:
+        - $ref: "#/components/parameters/client_id"
+      security:
+        - jwt_token: [ ]
+      description: "get auth provider information for a specific client"
+      responses:
+        "200":
+          description: "the client data was returned"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/client_data"
+    post:
+      parameters:
+        - $ref: "#/components/parameters/client_id"
+      security:
+        - jwt_token: [ ]
+      description: "change auth provider information for the client"
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/client_update_package"
+      responses:
+        "200":
+          description: "the client data was returned"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/client_data"
+    delete:
+      security:
+        - jwt_token: [ ]
+      parameters:
+        - $ref: "#/components/parameters/client_id"
+      description: "delete the client from the auth provider"
+      responses:
+        "204":
+          description: "the client was deleted"
+
+  "/builtins/auth/clients/{client_id}/roles":
+
+    delete:
+      parameters:
+        - $ref: "#/components/parameters/client_id"
+      security:
+        - jwt_token: [ ]
+      description: "remove all roles from a the client"
+      responses:
+        "204":
+          description: "all roles removed"
+
+  "/builtins/auth/clients/{client_id}/roles/{role}":
+
+    post:
+      parameters:
+        - $ref: "#/components/parameters/client_id"
+        - $ref: "#/components/parameters/role"
+      security:
+        - jwt_token: [ ]
+      description: "add a specific role to the client"
+      responses:
+        "204":
+          description: "the role was added"
+    delete:
+      parameters:
+        - $ref: "#/components/parameters/client_id"
+        - $ref: "#/components/parameters/role"
+      security:
+        - jwt_token: [ ]
+      description: "remove a specific role from the client"
+      responses:
+        "204":
+          description: "the role was removed"
+
+  "/builtins/auth/clients/{client_id}/enable":
+    post:
+      security:
+        - jwt_token: [ ]
+      parameters:
+        - $ref: "#/components/parameters/client_id"
+        - $ref: "#/components/parameters/role"
+      description: "enable the client in the auth provider"
+      responses:
+        "204":
+          description: "the client was enabled"
+  "/builtins/auth/clients/{client_id}/disable":
+    post:
+      parameters:
+        - $ref: "#/components/parameters/client_id"
+        - $ref: "#/components/parameters/role"
+      security:
+        - jwt_token: [ ]
+      description: "disable the client in the auth provider"
+      responses:
+        "204":
+          description: "the client was disabled"
