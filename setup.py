@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-DESCRIPTION = "A simple python3 microservice development library, designed to be intuitive, modular, and configurable"
+DESCRIPTION = "ALowball is designed to add simple endpoint level RBAC to your Flask based API services."
 VERSION = "1.0.0"
 
 
