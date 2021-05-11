@@ -256,6 +256,22 @@ class TestCreateToken:
         assert response.status_code == 401
         assert "Current Token Has Inadequate Roles for Requested Action" in response.json["message"]
 
+    def test_create_token_fails_for_non_admin_client_when_get_client_is_not_implemented(self,
+                                                                                        normal1_token1_request_header,
+                                                                                        client_id_normal1,
+                                                                                        lowball_app_mock_providers,
+                                                                                        mock_lookup_token_filled,
+                                                                                        mock_get_client_not_implemented
+                                                                                        ):
+        response = lowball_app_mock_providers.post(self.ROUTE, headers=normal1_token1_request_header,
+                                                   json={"client_id": client_id_normal1})
+        lowball_app_mock_providers.application.auth_provider.get_client.assert_called_once_with(client_id_normal1)
+
+        print(response.json)
+        assert response.status_code == 409
+        assert "get_client is not implemented in this auth provider. Non admin clients are unable to create tokens" \
+               in response.json["message"]
+
     def test_create_token_creates_expected_tokens_for_admin_clients(self,
                                                                     lowball_app_mock_providers,
                                                                     mock_lookup_token_filled,
