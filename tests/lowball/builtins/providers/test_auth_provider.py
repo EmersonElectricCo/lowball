@@ -63,3 +63,15 @@ class TestDefaultAuthProvider:
 
     def test_initialized_returns_true(self, default_auth_provider):
         assert default_auth_provider.initialized
+
+    def test_get_client_returns_expected_client(self, default_auth_provider, get_client_expected_outcomes):
+
+        client_id, expected_client_data = get_client_expected_outcomes
+
+        client_data = default_auth_provider.get_client(client_id)
+
+        assert type(client_data) == type(expected_client_data)
+        if expected_client_data is not None:
+            assert isinstance(client_data, ClientData)
+            assert client_data.to_dict() == expected_client_data.to_dict()
+
