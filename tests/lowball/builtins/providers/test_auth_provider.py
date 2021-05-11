@@ -70,8 +70,9 @@ class TestDefaultAuthProvider:
 
         client_data = default_auth_provider.get_client(client_id)
 
-        assert type(client_data) == type(expected_client_data)
-        if expected_client_data is not None:
+        if isinstance(expected_client_data, ClientData):
             assert isinstance(client_data, ClientData)
             assert client_data.to_dict() == expected_client_data.to_dict()
+        else:
+            assert client_data is None
 
