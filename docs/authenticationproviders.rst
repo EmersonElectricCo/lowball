@@ -134,7 +134,10 @@ implementations would be managing the chosen Identity Provider from lowball.
   `ClientData` Objects.
 
 `get_client`
-  Get details on the specified `client_id` provided. It should return a `ClientData` Object
+  Get details on the specified `client_id` provided. It must return an instance of a `ClientData` Object or
+  `ClientData` subclass representing the requested `client_id` and associated roles. This method must be implemented
+  to enable non admin clients to create their own tokens without going through the typical login process,
+  in addition to any features involved with accessing client information.
 
 ClientData Object
 =================
