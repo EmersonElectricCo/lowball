@@ -8,7 +8,7 @@ import pytest
 from ruamel.yaml import YAML
 
 from lowball.builtins.providers import DefaultAuthDB, DefaultAuthProvider, DefaultAuthPackage
-from lowball.models.authentication_models import Token
+from lowball.models.authentication_models import Token, ClientData
 from lowball.models.provider_models.auth_provider import AuthPackage
 import json
 
@@ -224,3 +224,22 @@ def pathlike_token(token, pathlike_token_id):
     new_token = deepcopy(token)
     new_token._token_id = pathlike_token_id
     return new_token
+
+
+@pytest.fixture(params=[
+    "admin",
+    "user",
+    "weirdo",
+    "blob",
+    1,
+    None,
+    "flop"
+])
+def get_client_expected_outcomes(request, admin_role):
+    client_id = request.param
+
+    if client_id == "admin":
+        return client_id, ClientData(client_id="admin", roles=admin_role)
+    else:
+        return client_id, None
+

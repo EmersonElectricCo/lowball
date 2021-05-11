@@ -70,7 +70,9 @@ class DefaultAuthProvider(AuthProvider):
             raise InvalidCredentialsException
 
     def get_client(self, client_id):
-        return ClientData(client_id=self.username, roles=["admin"])
+        if client_id == self.username:
+            return ClientData(client_id=self.username, roles=["admin"])
+        return None
 
     @property
     def auth_package_class(self):

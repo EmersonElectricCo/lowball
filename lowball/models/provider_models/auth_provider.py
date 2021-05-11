@@ -22,18 +22,6 @@ class AuthProvider(ABC):
         """
         pass
 
-    @abstractmethod
-    def get_client(self, client_id):
-        """Get data for a user.
-
-        
-
-        :param client_id: user to get data for
-        :type client_id: str
-        :return: ClientData  or subclass
-        """
-        pass
-
     @property
     def initialized(self):
         """Property used to determine if the authentication provider is initialized.
@@ -85,6 +73,17 @@ class AuthProvider(ABC):
         :return: AuthPackage class accepted for this auth provider
         """
         raise NotImplementedException("self_update_client_package_class")
+
+    def get_client(self, client_id):
+        """Get data for a user.
+
+
+
+        :param client_id: user to get data for
+        :type client_id: str
+        :return: ClientData  or subclass
+        """
+        raise NotImplementedException("get_client")
 
     def create_client(self, client_registration_package):
         """Create a client.

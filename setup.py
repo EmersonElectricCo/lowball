@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 DESCRIPTION = "Lowball is designed to add simple endpoint level RBAC to your Flask based API services."
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 
 def read_requirements():

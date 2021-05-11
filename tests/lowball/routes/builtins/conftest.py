@@ -8,7 +8,7 @@ import pytest
 from lowball.authentication import Authentication
 from lowball.builtins import DefaultAuthDB, DefaultAuthProvider
 from lowball.core import Lowball
-from lowball.exceptions import InvalidCredentialsException
+from lowball.exceptions import InvalidCredentialsException, NotImplementedException
 from lowball.models.provider_models.auth_provider import AuthPackage, AuthProvider, CreateClientPackage, \
     ClientRegistrationPackage, SelfUpdateClientPackage, UpdateClientPackage
 from lowball.models.provider_models.auth_db import AuthDatabase
@@ -945,10 +945,6 @@ class TestAuthProvider(AuthProvider):
 
         pass
 
-    def get_client(self, client_id):
-
-        pass
-
     @property
     def auth_package_class(self):
         return None
@@ -977,6 +973,11 @@ def mock_get_client_filled(monkeypatch, client_db):
         return client_db.get(client_id)
 
     monkeypatch.setattr(TestAuthProvider, "get_client", Mock(wraps=get_client))
+
+@pytest.fixture
+def mock_get_client_not_implemented(monkeypatch):
+
+    monkeypatch.setattr(TestAuthProvider, "get_client", Mock(side_effect=NotImplementedException("get_client")))
 
 @pytest.fixture
 def mock_list_clients_filled(monkeypatch, client_db):

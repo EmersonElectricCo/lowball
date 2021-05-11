@@ -178,7 +178,13 @@ def create_token():
         if current_app.auth_provider is None:
             raise AuthenticationNotInitializedException
 
-        target_client = current_app.auth_provider.get_client(client_id)
+        try:
+            target_client = current_app.auth_provider.get_client(client_id)
+        except NotImplementedException as err:
+            err.code = 409
+            err.description = "get_client is not implemented in this auth provider. " \
+                              "Non admin clients are unable to create tokens"
+            raise err
 
         if not target_client:
             raise NotFoundException("Client ID for requesting token not found in auth provider")
