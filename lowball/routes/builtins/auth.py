@@ -47,7 +47,6 @@ def login():
                                       "The auth provider has not defined an authentication package")
     try:
         auth_package = auth_package_class(**post_data)
-        print(auth_package.__dict__)
     except Exception as err:
         raise MalformedAuthPackageException(str(err))
 
