@@ -2,9 +2,11 @@ name: Test & Upload to TestPyPI
 
 # Controls when the action will run. 
 on:
-  # Triggers the workflow on push to the master branch
+  # Triggers the workflow on push to anything except the main branch
   push:
-    branches: [ main ]
+    branches: # ref: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
+      - '*' # For negation we have to have a least one positive match; so we will just match everything
+      - '!main' # Then discard the main match
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -43,5 +45,5 @@ jobs:
           python3 -m twine upload dist/*
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-          TWINE_REPOSITORY: pypi
+          TWINE_PASSWORD: ${{ secrets.PYPI_TEST_API_TOKEN }}
+          TWINE_REPOSITORY: testpypi
