@@ -1,0 +1,48 @@
+name: Test & Upload to PyPI
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push to the main branch
+  push:
+    branches: # ref: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
+      - 'main' # Just Main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out the the under $GITHUB_WORKSPACE
+      - uses: actions/checkout@v2
+
+      # Set up python3
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8 
+
+      # Installs and upgrades pip, installs other dependencies and installs the package from setup.py
+      - name: "Installs and upgrades pip, installs other dependencies and installs the package from setup.py"
+        run: |
+          # Upgrade pip
+          python3 -m pip install --upgrade pip
+          # Install build deps
+          python3 -m pip install setuptools wheel twine
+          python3 setup.py install
+
+      # Tests with unittest
+      - name: Test with unittest
+        run: |
+          pytest -v --tb no tests/
+
+      # Upload to TestPyPI
+      - name: Build and Upload to TestPyPI
+        run: |
+          python3 setup.py sdist bdist_wheel
+          python3 -m twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_REPOSITORY: pypi
