@@ -53,6 +53,7 @@ class Lowball(Flask):
             raise TypeError("logging_handler must subclass logging.Handler")
         else:
             self.logging_handler = logging_handler(**self.lowball_config.logging)
+            self.logger.setLevel(self.logging_handler.level)
             self.logger.addHandler(self.logging_handler)
 
         if auth_provider is None:
