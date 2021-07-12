@@ -48,7 +48,8 @@ class TestLowballCoreInit:
         assert app.error_handler == default_error_handler
         assert app.response_class == LowballResponse
 
-        assert len(app.logger.handlers) > 0  # This means that a handler was added during init
+        assert app.logging_handler in app.logger.handlers
+        assert app.logger.level == app.logging_handler.level
         flask.Flask.register_blueprint.assert_has_calls([call(status), call(auth)], any_order=True)
 
         # Assert that the `add_rid` function was added to before_request_funcs
