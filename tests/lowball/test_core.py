@@ -48,8 +48,7 @@ class TestLowballCoreInit:
         assert app.error_handler == default_error_handler
         assert app.response_class == LowballResponse
 
-        assert len(app.logger.handlers) > 0  # This means that a handler was added during init
-        print("how many handlers" + str(len(app.logger.handlers)))
+        assert app.logging_handler in app.logger.handlers
         assert app.logger.level == app.logging_handler.level
         flask.Flask.register_blueprint.assert_has_calls([call(status), call(auth)], any_order=True)
 
