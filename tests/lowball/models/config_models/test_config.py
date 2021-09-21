@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import mock_open, patch
 
 from lowball.models.config_models import *
-
+from io import StringIO
 
 class TestMetaConfig:
     @pytest.mark.parametrize("name, base_route, description, tags", [
@@ -140,5 +140,31 @@ class TestLoadingConfig:
             test_config = config_from_file(yaml_config_path)
 
         mocked_open_func.assert_any_call(yaml_config_path, "r")
+        assert isinstance(test_config, Config)
+        assert config_dict == test_config.to_dict()
+
+    def test_loading_config_file_with_subobject_paths_returns_proper_config_object(self,
+                                                                                   yaml_config_path,
+                                                                                   config_dict,
+                                                                                   meta_file_path,
+                                                                                   auth_provider_file_path,
+                                                                                   yaml_file_data_with_path,
+                                                                                   meta_yaml_file_data,
+                                                                                   auth_provider_yaml_file_data,
+                                                                                   tmp_path):
+
+        def mocked_open(file, mode='r', *args, **kwargs):
+            if file == meta_file_path:
+                return StringIO(meta_yaml_file_data)
+            if file == yaml_config_path:
+                return StringIO(yaml_file_data_with_path)
+            if file == auth_provider_file_path:
+                return StringIO(auth_provider_yaml_file_data)
+            else:
+                return open(file, mode, *args, **kwargs)
+
+        with patch("lowball.models.config_models.config.open", mocked_open):
+            test_config = config_from_file(yaml_config_path)
+
         assert isinstance(test_config, Config)
         assert config_dict == test_config.to_dict()
