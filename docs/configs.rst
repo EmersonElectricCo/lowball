@@ -3,7 +3,9 @@
 Configs
 #######
 
-Lowball configs come in the form of a YAML or JSON file. There are six recognized top-level configuration sections:
+Lowball configs come in the form of a YAML or JSON file. There are six recognized top-level configuration sections. Each
+section can contain the configuration object for that section or they can point to a json/yaml file containing the
+configuration data for that section
 
 `meta`
   Metadata about the application such as description, tags, etc.
@@ -240,6 +242,22 @@ We would read it in like this:
     logging:
       ...
 
+or this if using sub files:
+
+.. code-block:: yaml
+
+    meta: /path/to/meta.yaml
+    authentication:
+      default_token_life: 3600
+      max_token_life: 7200
+      token_secret: "supersecrettokensecret"
+    application: /path/to/app.yaml
+    auth_provider:
+      ...
+    auth_db:
+      ...
+    logging:
+      ...
 
 We would read it in like this:
 
