@@ -136,6 +136,26 @@ def yaml_file_read_data():
     return 'meta:\n  name: APP_NAME\n  base_route: /base/route\n  description: description\n  tags:\n  - tag\n  - list\napplication:\n  field1: 1\n  field2: string\nauth_provider:\n  field1: 1\n  field2: string\nauth_db:\n  db_host: database.test.com\n  db_port: 9999\n  db_user: root\n  db_password: BadPass01\nlogging:\n  logging_path: /var/log/app/app.log\nauthentication:\n  default_token_life: 1800\n  max_token_life: 1800\n  token_secret: supersecrettokensecret\n  ignore_auth: false\n'
 
 
+@pytest.fixture
+def meta_file_path():
+    return "/path/to/meta.yaml"
+
+@pytest.fixture
+def auth_provider_file_path():
+    return "/path/to/authp.yaml"
+
+@pytest.fixture
+def yaml_file_data_with_path(meta_file_path, auth_provider_file_path):
+    return f'meta: {meta_file_path}\napplication:\n  field1: 1\n  field2: string\nauth_provider: {auth_provider_file_path}\nauth_db:\n  db_host: database.test.com\n  db_port: 9999\n  db_user: root\n  db_password: BadPass01\nlogging:\n  logging_path: /var/log/app/app.log\nauthentication:\n  default_token_life: 1800\n  max_token_life: 1800\n  token_secret: supersecrettokensecret\n  ignore_auth: false\n'
+
+@pytest.fixture
+def meta_yaml_file_data():
+    return "name: APP_NAME\nbase_route: /base/route\ndescription: description\ntags:\n- tag\n- list\n"
+
+@pytest.fixture
+def auth_provider_yaml_file_data():
+    return "field1: 1\nfield2: string"
+
 @pytest.fixture(params=["1", "1234", "1234567890"])
 def int_as_string(request):
     return request.param

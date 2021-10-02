@@ -160,6 +160,10 @@ def config_from_object(config_object):
     if not isinstance(config_object, dict):
         raise TypeError("config object must be a dictionary")
 
+    for key, value in config_object.items():
+        if isinstance(value, (str, Path)):
+            config_object[key] = _load_config_file(value)
+
     meta = MetaConfig(**config_object.get("meta", {}))
     authentication = AuthenticationConfig(**config_object.get("authentication", {}))
     application = config_object.get("application")
@@ -167,9 +171,35 @@ def config_from_object(config_object):
     auth_db = config_object.get("auth_db")
     logging = config_object.get("logging")
 
+
+
     return Config(meta=meta, authentication=authentication, application=application, auth_provider=auth_provider,
                   auth_db=auth_db, logging=logging)
 
+
+def _load_config_file(filepath):
+    """Load a configuration object at the file path. Supports both yaml and json format.
+    The data will be loaded and converted to a dictionary, which is then returned.
+
+
+    :type filepath: str, :class:`pathlib.Path`
+    :param filepath: path to the config file on the system
+    :rtype: dict
+    :return: dictionary containing the data
+
+    """
+    if not isinstance(filepath, (str, Path)):
+        raise TypeError("filepath must be a string or a pathlib.Path object")
+
+    with open(filepath, "r") as config_file:
+        config_data = config_file.read()
+
+    try:
+        yaml = YAML()
+        config_object = dict(yaml.load(config_data))
+        return config_object
+    except:
+        raise ValueError("invalid config format. All configuration files must be yaml or json")
 
 def config_from_file(filepath):
     """Generate a Config object from the data in a config file.
@@ -184,17 +214,7 @@ def config_from_file(filepath):
     :rtype: Config
     :return: Object representation of a  Lowball config
     """
-    if not isinstance(filepath, (str, Path)):
-        raise TypeError("filepath must be a string or a pathlib.Path object")
-
-    with open(filepath, "r") as config_file:
-        config_data = config_file.read()
-
-    try:
-        yaml = YAML()
-        config_object = dict(yaml.load(config_data))
-    except:
-        raise ValueError("invalid config format")
+    config_object = _load_config_file(filepath)
 
     return config_from_object(config_object)
 
@@ -219,10 +239,10 @@ class Config:
     :type kwargs: dict
     """
 
-    def __init__(self, meta=MetaConfig(), authentication=AuthenticationConfig(), application=None, auth_provider=None, auth_db=None, logging=None,
+    def __init__(self, meta=None, authentication=None, application=None, auth_provider=None, auth_db=None, logging=None,
                  **kwargs):
-        self.meta = meta
-        self.authentication = authentication
+        self.meta = meta if meta is not None else MetaConfig()
+        self.authentication = authentication if authentication is not None else AuthenticationConfig()
         self.application = application if application is not None else {}
         self.auth_provider = auth_provider if auth_provider is not None else {}
         self.auth_db = auth_db if auth_db is not None else {}
